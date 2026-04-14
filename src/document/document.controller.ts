@@ -49,6 +49,7 @@ export class DocumentController {
     @Query('matiereId') matiereId?: string,
   ): Promise<Document[]> {
     if (matiereId) return this.documentService.findByMatiere(matiereId);
+    if (filiereId && niveauId) return this.documentService.findByFiliereAndNiveau(filiereId, niveauId);
     if (niveauId) return this.documentService.findByNiveau(niveauId);
     if (filiereId) return this.documentService.findByFiliere(filiereId);
     return this.documentService.findAll();

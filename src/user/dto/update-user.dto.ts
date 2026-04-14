@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { UserRole } from '../../database/entities/user.entity';
 
 export class UpdateUserDto {
@@ -22,4 +22,18 @@ export class UpdateUserDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole;
+
+  @ApiPropertyOptional({ description: 'ID de la filière de l\'étudiant' })
+  @IsUUID()
+  @IsOptional()
+  filiereId?: string;
+
+  @ApiPropertyOptional({ description: 'ID du niveau de l\'étudiant' })
+  @IsUUID()
+  @IsOptional()
+  niveauId?: string;
+
+  @ApiPropertyOptional({ description: 'URL de la photo de profil' })
+  @IsOptional()
+  imageUrl?: string;
 }

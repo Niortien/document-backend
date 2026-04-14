@@ -14,6 +14,7 @@ export class UserService {
 
  async findAll(): Promise<User[]> {
   return this.userRepository.find({
+    relations: ['filiere', 'niveau'],
     order: {
       createdAt: 'DESC',
     },
@@ -21,7 +22,7 @@ export class UserService {
 }
 
   async findOne(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+    return this.userRepository.findOne({ where: { id }, relations: ['filiere', 'niveau'] });
   }
 
   async findByEmail(email: string): Promise<User | null> {

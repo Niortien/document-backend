@@ -1,9 +1,32 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, UseInterceptors, UploadedFile, BadRequestException, Patch } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from '../database/entities/user.entity';
+
+const ALLOWED_IMAGE_MIMETYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+const imageUploadOptions = {
+  storage: diskStorage({
+    destination: './uploads',
+    filename: (_req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + extname(file.originalname));
+    },
+  }),
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_IMAGE_MIMETYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new BadRequestException('Seuls les fichiers image sont autorisés (jpeg, png, gif, webp)'), false);
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+};
 
 @ApiTags('users')
 @Controller('users')
@@ -81,5 +104,22 @@ export class UserController {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
     return this.userService.remove(id);
+  }
+
+  @Patch(':id/image')
+  @UseInterceptors(FileInterceptor('image', imageUploadOptions))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Uploader une photo de profil', description: 'Uploader ou remplacer la photo de profil d\'un utilisateur' })
+  @ApiParam({ name: 'id', description: 'ID de l\'utilisateur', type: 'string' })
+  @ApiResponse({ status: 200, description: 'Photo de profil mise à jour', type: User })
+  @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
+  async uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<User | null> {
+    const user = await this.userService.findOne(id);
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!file) throw new BadRequestException('Un fichier image est requis');
+    return this.userService.update(id, { imageUrl: `uploads/${file.filename}` });
   }
 }

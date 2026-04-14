@@ -28,6 +28,10 @@ export class DocumentService {
     return this.documentRepository.find({ where: { niveauId }, order: { createdAt: 'DESC' } });
   }
 
+  findByFiliereAndNiveau(filiereId: string, niveauId: string): Promise<Document[]> {
+    return this.documentRepository.find({ where: { filiereId, niveauId }, order: { createdAt: 'DESC' } });
+  }
+
   findByMatiere(matiereId: string): Promise<Document[]> {
     return this.documentRepository.find({ where: { matiereId }, order: { createdAt: 'DESC' } });
   }

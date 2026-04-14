@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
-import { ApiProperty } from '@nestjs/swagger';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Filiere } from './filiere.entity';
+import { Niveau } from './niveau.entity';
 
 export enum UserRole {
   ETUDIANT = 'etudiant',
@@ -37,6 +38,26 @@ export class User {
   @ApiProperty({ description: 'Role de l\'utilisateur', enum: UserRole, example: UserRole.ETUDIANT })
   @Column({ type: 'enum', enum: UserRole, default: UserRole.ETUDIANT })
   role: UserRole;
+
+  @ApiPropertyOptional({ description: 'Filière de l\'étudiant' })
+  @ManyToOne(() => Filiere, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'filiereId' })
+  filiere: Filiere | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  filiereId: string | null;
+
+  @ApiPropertyOptional({ description: 'Niveau de l\'étudiant' })
+  @ManyToOne(() => Niveau, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'niveauId' })
+  niveau: Niveau | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  niveauId: string | null;
+
+  @ApiPropertyOptional({ description: 'URL de la photo de profil', example: 'uploads/photo.jpg' })
+  @Column({ type: 'varchar', nullable: true, length: 500 })
+  imageUrl: string | null;
 
   @ApiProperty({ description: 'Date when the user was created', example: '2023-01-01T00:00:00.000Z' })
   @CreateDateColumn()

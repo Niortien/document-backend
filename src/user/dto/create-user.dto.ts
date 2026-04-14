@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../database/entities/user.entity';
 
@@ -29,4 +29,19 @@ export class CreateUserDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole;
+
+  @ApiPropertyOptional({ description: 'ID de la filière de l\'étudiant', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID()
+  @IsOptional()
+  filiereId?: string;
+
+  @ApiPropertyOptional({ description: 'ID du niveau de l\'étudiant', example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsUUID()
+  @IsOptional()
+  niveauId?: string;
+
+  @ApiPropertyOptional({ description: 'URL de la photo de profil', example: 'uploads/photo.jpg' })
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }
