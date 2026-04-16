@@ -7,9 +7,12 @@ import { NiveauModule } from './niveau/niveau.module';
 import { MatiereModule } from './matiere/matiere.module';
 import { DocumentModule } from './document/document.module';
 import { AuthModule } from './auth/auth.module';
+import { ScolariteModule } from './scolarite/scolarite.module';
+import { TransportModule } from './transport/transport.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
-  imports: [AuthModule, UserModule, FiliereModule, NiveauModule, MatiereModule, DocumentModule],
+  imports: [AuthModule, UserModule, FiliereModule, NiveauModule, MatiereModule, DocumentModule, ScolariteModule, TransportModule, AdminModule],
   controllers: [AppController],
   providers: [AppService],
 })

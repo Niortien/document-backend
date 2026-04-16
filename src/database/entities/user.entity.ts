@@ -28,7 +28,7 @@ export class User {
   email: string;
 
   @ApiProperty({ description: 'Hashed password of the user' })
-  @Column({ length: 255 })
+  @Column({ length: 255, select: false })
   password: string;
 
   @ApiProperty({ description: 'Whether the user account is active', default: true, example: true })
