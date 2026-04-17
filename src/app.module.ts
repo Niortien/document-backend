@@ -10,9 +10,10 @@ import { AuthModule } from './auth/auth.module';
 import { ScolariteModule } from './scolarite/scolarite.module';
 import { TransportModule } from './transport/transport.module';
 import { AdminModule } from './admin/admin.module';
+import { NotesModule } from './notes/notes.module';
 
 @Module({
-  imports: [AuthModule, UserModule, FiliereModule, NiveauModule, MatiereModule, DocumentModule, ScolariteModule, TransportModule, AdminModule],
+  imports: [AuthModule, UserModule, FiliereModule, NiveauModule, MatiereModule, DocumentModule, ScolariteModule, TransportModule, AdminModule, NotesModule],
   controllers: [AppController],
   providers: [AppService],
 })
