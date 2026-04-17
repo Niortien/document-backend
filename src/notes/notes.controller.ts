@@ -27,11 +27,14 @@ import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { SaisirSessionDto } from './dto/saisir-session.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
 import { NoteEtudiant } from '../database/entities/note-etudiant.entity';
 
 @ApiTags('notes')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('notes')
 export class NotesController {
   constructor(private readonly notesService: NotesService) {}
@@ -41,6 +44,7 @@ export class NotesController {
   // ──────────────────────────────────────────────────────────────────
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @ApiOperation({
     summary: 'Saisir les notes d\'un étudiant',
     description:
@@ -52,11 +56,15 @@ export class NotesController {
   @ApiResponse({ status: 201, description: 'Note créée avec succès', type: NoteEtudiant })
   @ApiResponse({ status: 400, description: 'Données invalides ou matière de type module' })
   @ApiResponse({ status: 409, description: 'Note déjà saisie pour cet étudiant/matière/année' })
-  create(@Body() dto: CreateNoteDto): Promise<NoteEtudiant> {
-    return this.notesService.create(dto);
+  create(
+    @Body() dto: CreateNoteDto,
+    @Request() req: { user: { id: string; role: string } },
+  ): Promise<NoteEtudiant> {
+    return this.notesService.create(dto, req.user.id, req.user.role);
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @ApiOperation({
     summary: 'Mettre à jour les notes d\'un étudiant',
     description:
@@ -67,11 +75,16 @@ export class NotesController {
   @ApiBody({ type: UpdateNoteDto })
   @ApiResponse({ status: 200, description: 'Note mise à jour', type: NoteEtudiant })
   @ApiResponse({ status: 404, description: 'Note non trouvée' })
-  update(@Param('id') id: string, @Body() dto: UpdateNoteDto): Promise<NoteEtudiant> {
-    return this.notesService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateNoteDto,
+    @Request() req: { user: { id: string; role: string } },
+  ): Promise<NoteEtudiant> {
+    return this.notesService.update(id, dto, req.user.id, req.user.role);
   }
 
   @Put(':id/session')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @ApiOperation({
     summary: 'Saisir la note de session',
     description:
@@ -83,18 +96,26 @@ export class NotesController {
   @ApiResponse({ status: 200, description: 'Note de session saisie', type: NoteEtudiant })
   @ApiResponse({ status: 400, description: 'L\'étudiant n\'est pas en session' })
   @ApiResponse({ status: 404, description: 'Note non trouvée' })
-  saisirSession(@Param('id') id: string, @Body() dto: SaisirSessionDto): Promise<NoteEtudiant> {
-    return this.notesService.saisirSession(id, dto);
+  saisirSession(
+    @Param('id') id: string,
+    @Body() dto: SaisirSessionDto,
+    @Request() req: { user: { id: string; role: string } },
+  ): Promise<NoteEtudiant> {
+    return this.notesService.saisirSession(id, dto, req.user.id, req.user.role);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Supprimer une note' })
   @ApiParam({ name: 'id', description: 'ID de la note' })
   @ApiResponse({ status: 204, description: 'Note supprimée' })
   @ApiResponse({ status: 404, description: 'Note non trouvée' })
-  remove(@Param('id') id: string): Promise<void> {
-    return this.notesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string; role: string } },
+  ): Promise<void> {
+    return this.notesService.remove(id, req.user.id, req.user.role);
   }
 
   // ──────────────────────────────────────────────────────────────────

@@ -11,9 +11,10 @@ import { ScolariteModule } from './scolarite/scolarite.module';
 import { TransportModule } from './transport/transport.module';
 import { AdminModule } from './admin/admin.module';
 import { NotesModule } from './notes/notes.module';
+import { ProfesseurModule } from './professeur/professeur.module';
 
 @Module({
-  imports: [AuthModule, UserModule, FiliereModule, NiveauModule, MatiereModule, DocumentModule, ScolariteModule, TransportModule, AdminModule, NotesModule],
+  imports: [AuthModule, UserModule, FiliereModule, NiveauModule, MatiereModule, DocumentModule, ScolariteModule, TransportModule, AdminModule, NotesModule, ProfesseurModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -11,6 +11,8 @@ import { Matiere } from '../database/entities/matiere.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { SaisirSessionDto } from './dto/saisir-session.dto';
+import { UserRole } from '../database/entities/user.entity';
+import { ProfesseurService } from '../professeur/professeur.service';
 
 /** Résultat agrégé d'un module complémentaire (ex: Mathématiques 1) */
 export interface ResultatModule {
@@ -36,7 +38,22 @@ export class NotesService {
     private noteRepository: Repository<NoteEtudiant>,
     @Inject('MATIERE_REPOSITORY')
     private matiereRepository: Repository<Matiere>,
+    private professeurService: ProfesseurService,
   ) {}
+
+  /**
+   * Si l'appelant est un professeur, vérifie qu'il a accès à la matière.
+   * Si c'est un admin, pas de vérification.
+   */
+  private async autoriserAccesMatiere(
+    matiereId: string,
+    userId: string,
+    userRole: string,
+  ): Promise<void> {
+    if (userRole === UserRole.PROFESSEUR) {
+      await this.professeurService.verifierAccesMatiere(userId, matiereId);
+    }
+  }
 
   // ─── Calculs internes ───────────────────────────────────────────────────────
 
@@ -64,7 +81,10 @@ export class NotesService {
 
   // ─── CRUD notes ─────────────────────────────────────────────────────────────
 
-  async create(dto: CreateNoteDto): Promise<NoteEtudiant> {
+  async create(dto: CreateNoteDto, callerId: string, callerRole: string): Promise<NoteEtudiant> {
+    // Vérifier l'accès (professeur = uniquement ses classes)
+    await this.autoriserAccesMatiere(dto.matiereId, callerId, callerRole);
+
     // Vérifier que la matière existe et que ce n'est pas un module parent
     const matiere = await this.matiereRepository.findOne({ where: { id: dto.matiereId } });
     if (!matiere) throw new NotFoundException('Matière non trouvée');
@@ -99,9 +119,10 @@ export class NotesService {
     return this.noteRepository.save(note);
   }
 
-  async update(id: string, dto: UpdateNoteDto): Promise<NoteEtudiant> {
+  async update(id: string, dto: UpdateNoteDto, callerId: string, callerRole: string): Promise<NoteEtudiant> {
     const note = await this.noteRepository.findOne({ where: { id } });
     if (!note) throw new NotFoundException('Note non trouvée');
+    await this.autoriserAccesMatiere(note.matiereId, callerId, callerRole);
 
     const moyenneClasse = dto.moyenneClasse !== undefined ? dto.moyenneClasse : note.moyenneClasse;
     const moyenneExamen = dto.moyenneExamen !== undefined ? dto.moyenneExamen : note.moyenneExamen;
@@ -124,9 +145,10 @@ export class NotesService {
     return this.noteRepository.findOne({ where: { id } }) as Promise<NoteEtudiant>;
   }
 
-  async saisirSession(id: string, dto: SaisirSessionDto): Promise<NoteEtudiant> {
+  async saisirSession(id: string, dto: SaisirSessionDto, callerId: string, callerRole: string): Promise<NoteEtudiant> {
     const note = await this.noteRepository.findOne({ where: { id } });
     if (!note) throw new NotFoundException('Note non trouvée');
+    await this.autoriserAccesMatiere(note.matiereId, callerId, callerRole);
     if (note.statut !== StatutNote.EN_SESSION) {
       throw new BadRequestException(
         `Cet étudiant n'est pas en session pour cette matière (statut actuel : ${note.statut}).`,
@@ -168,9 +190,10 @@ export class NotesService {
     });
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, callerId: string, callerRole: string): Promise<void> {
     const note = await this.noteRepository.findOne({ where: { id } });
     if (!note) throw new NotFoundException('Note non trouvée');
+    await this.autoriserAccesMatiere(note.matiereId, callerId, callerRole);
     await this.noteRepository.delete(id);
   }
 
