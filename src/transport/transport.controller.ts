@@ -8,15 +8,33 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { TransportService } from './transport.service';
 import { CreateTransportConfigDto } from './dto/create-transport-config.dto';
 import { UpdateTransportConfigDto } from './dto/update-transport-config.dto';
 import { CreateTransportAbonnementDto } from './dto/create-transport-abonnement.dto';
 import { CreateVersementTransportDto } from './dto/create-versement-transport.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
+
+type AuthedRequest = { user: { id: string; role: UserRole } };
+
+function assertSelfOrAdmin(req: AuthedRequest, userId: string): void {
+  if (req.user.role !== UserRole.ADMIN && req.user.id !== userId) {
+    throw new ForbiddenException('Accès refusé : vous ne pouvez consulter que vos propres données.');
+  }
+}
 
 @ApiTags('transport')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 @Controller('transport')
 export class TransportController {
   constructor(private readonly transportService: TransportService) {}
@@ -84,18 +102,22 @@ export class TransportController {
   }
 
   @Get('user/:userId')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({ summary: "Obtenir tous les abonnements transport d'un étudiant" })
   @ApiParam({ name: 'userId', description: "ID de l'utilisateur" })
   @ApiResponse({ status: 200, description: "Abonnements de l'étudiant" })
-  findByUser(@Param('userId') userId: string) {
+  findByUser(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.transportService.findByUser(userId);
   }
 
   @Get('user/:userId/dashboard')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({ summary: "Tableau de bord transport d'un étudiant (abonnements + versements)" })
   @ApiParam({ name: 'userId', description: "ID de l'utilisateur" })
   @ApiResponse({ status: 200, description: 'Tableau de bord avec abonnements et versements' })
-  getDashboard(@Param('userId') userId: string) {
+  getDashboard(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.transportService.getDashboardEtudiant(userId);
   }
 
@@ -128,10 +150,12 @@ export class TransportController {
   }
 
   @Get('versements/user/:userId')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({ summary: "Lister tous les versements transport d'un utilisateur" })
   @ApiParam({ name: 'userId', description: "ID de l'utilisateur" })
   @ApiResponse({ status: 200, description: 'Liste des versements' })
-  findVersementsByUser(@Param('userId') userId: string) {
+  findVersementsByUser(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.transportService.findVersementsByUser(userId);
   }
 

@@ -1,11 +1,17 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { FiliereService } from './filiere.service';
 import { CreateFiliereDto } from './dto/create-filiere.dto';
 import { UpdateFiliereDto } from './dto/update-filiere.dto';
 import { Filiere } from '../database/entities/filiere.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
 
 @ApiTags('filieres')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('filieres')
 export class FiliereController {
   constructor(private readonly filiereService: FiliereService) {}
@@ -29,6 +35,7 @@ export class FiliereController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Créer une nouvelle filière', description: 'Créer une nouvelle filière avec les données fournies' })
   @ApiBody({ type: CreateFiliereDto, description: 'Données de la filière à créer' })
   @ApiResponse({ status: 201, description: 'Filière créée avec succès', type: Filiere })
@@ -41,6 +48,7 @@ export class FiliereController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Mettre à jour une filière', description: 'Mettre à jour une filière existante avec de nouvelles données' })
   @ApiParam({ name: 'id', description: 'ID de la filière', type: 'string' })
   @ApiBody({ type: UpdateFiliereDto, description: 'Données de la filière à mettre à jour' })
@@ -58,6 +66,7 @@ export class FiliereController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Supprimer une filière', description: 'Supprimer une filière par son ID' })
   @ApiParam({ name: 'id', description: 'ID de la filière', type: 'string' })
   @ApiResponse({ status: 200, description: 'Filière supprimée avec succès' })

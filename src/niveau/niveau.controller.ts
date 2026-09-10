@@ -1,11 +1,17 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { NiveauService } from './niveau.service';
 import { CreateNiveauDto } from './dto/create-niveau.dto';
 import { UpdateNiveauDto } from './dto/update-niveau.dto';
 import { Niveau } from '../database/entities/niveau.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
 
 @ApiTags('niveaux')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('niveaux')
 export class NiveauController {
   constructor(private readonly niveauService: NiveauService) {}
@@ -31,6 +37,7 @@ export class NiveauController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Créer un nouveau niveau', description: 'Créer un nouveau niveau avec les données fournies' })
   @ApiBody({ type: CreateNiveauDto, description: 'Données du niveau à créer' })
   @ApiResponse({ status: 201, description: 'Niveau créé avec succès', type: Niveau })
@@ -40,6 +47,7 @@ export class NiveauController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Mettre à jour un niveau', description: 'Mettre à jour un niveau existant avec de nouvelles données' })
   @ApiParam({ name: 'id', description: 'ID du niveau', type: 'string' })
   @ApiBody({ type: UpdateNiveauDto, description: 'Données du niveau à mettre à jour' })
@@ -52,6 +60,7 @@ export class NiveauController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Supprimer un niveau', description: 'Supprimer un niveau par son ID' })
   @ApiParam({ name: 'id', description: 'ID du niveau', type: 'string' })
   @ApiResponse({ status: 200, description: 'Niveau supprimé avec succès' })

@@ -1,11 +1,17 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { MatiereService } from './matiere.service';
 import { CreateMatiereDto } from './dto/create-matiere.dto';
 import { UpdateMatiereDto } from './dto/update-matiere.dto';
 import { Matiere } from '../database/entities/matiere.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
 
 @ApiTags('matieres')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('matieres')
 export class MatiereController {
   constructor(private readonly matiereService: MatiereService) {}
@@ -36,6 +42,7 @@ export class MatiereController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Créer une nouvelle matière', description: 'Créer une nouvelle matière avec les données fournies' })
   @ApiBody({ type: CreateMatiereDto, description: 'Données de la matière à créer' })
   @ApiResponse({ status: 201, description: 'Matière créée avec succès', type: Matiere })
@@ -45,6 +52,7 @@ export class MatiereController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Mettre à jour une matière', description: 'Mettre à jour une matière existante avec de nouvelles données' })
   @ApiParam({ name: 'id', description: 'ID de la matière', type: 'string' })
   @ApiBody({ type: UpdateMatiereDto, description: 'Données de la matière à mettre à jour' })
@@ -57,6 +65,7 @@ export class MatiereController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Supprimer une matière', description: 'Supprimer une matière par son ID' })
   @ApiParam({ name: 'id', description: 'ID de la matière', type: 'string' })
   @ApiResponse({ status: 200, description: 'Matière supprimée avec succès' })

@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Body, Param, Delete, Put,
   HttpException, HttpStatus, Query, UseInterceptors,
-  UploadedFile, BadRequestException,
+  UploadedFile, BadRequestException, UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -10,7 +10,11 @@ import { DocumentService } from './document.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { Document, FileType } from '../database/entities/document.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery, ApiConsumes, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
 
 const ALLOWED_MIMETYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
@@ -33,6 +37,8 @@ const multerOptions = {
 };
 
 @ApiTags('documents')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('documents')
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
@@ -67,6 +73,7 @@ export class DocumentController {
   }
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @UseInterceptors(FileInterceptor('file', multerOptions))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Créer un document avec fichier', description: 'Upload un fichier PDF ou image et crée le document associé' })
@@ -82,6 +89,7 @@ export class DocumentController {
   }
 
   @Put(':id')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @ApiOperation({ summary: 'Mettre à jour un document', description: 'Mettre à jour un document existant avec de nouvelles données' })
   @ApiParam({ name: 'id', description: 'ID du document', type: 'string' })
   @ApiBody({ type: UpdateDocumentDto, description: 'Données du document à mettre à jour' })
@@ -94,6 +102,7 @@ export class DocumentController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.PROFESSEUR)
   @ApiOperation({ summary: 'Supprimer un document', description: 'Supprimer un document par son ID' })
   @ApiParam({ name: 'id', description: 'ID du document', type: 'string' })
   @ApiResponse({ status: 200, description: 'Document supprimé avec succès' })

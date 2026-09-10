@@ -8,16 +8,34 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { ScolariteService } from './scolarite.service';
 import { CreateScolariteConfigDto } from './dto/create-scolarite-config.dto';
 import { UpdateScolariteConfigDto } from './dto/update-scolarite-config.dto';
 import { CreateScolariteEtudiantDto } from './dto/create-scolarite-etudiant.dto';
 import { CreateVersementScolariteDto } from './dto/create-versement-scolarite.dto';
 import { CreateEcheancierScolariteDto } from './dto/create-echeancier-scolarite.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../database/entities/user.entity';
+
+type AuthedRequest = { user: { id: string; role: UserRole } };
+
+function assertSelfOrAdmin(req: AuthedRequest, userId: string): void {
+  if (req.user.role !== UserRole.ADMIN && req.user.id !== userId) {
+    throw new ForbiddenException('Accès refusé : vous ne pouvez consulter que vos propres données.');
+  }
+}
 
 @ApiTags('scolarite')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 @Controller('scolarite')
 export class ScolariteController {
   constructor(private readonly scolariteService: ScolariteService) {}
@@ -102,19 +120,23 @@ export class ScolariteController {
   }
 
   @Get('user/:userId')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({ summary: 'Obtenir toutes les scolarités d\'un étudiant (par userId)' })
   @ApiParam({ name: 'userId' })
-  findByUser(@Param('userId') userId: string) {
+  findByUser(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.scolariteService.findByUser(userId);
   }
 
   @Get('user/:userId/dashboard')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({
     summary: 'Tableau de bord scolarité temps réel d\'un étudiant',
     description: 'Retourne les scolarités avec leurs échéances (montants, dates limites, statuts) et tous les versements effectués',
   })
   @ApiParam({ name: 'userId' })
-  getDashboard(@Param('userId') userId: string) {
+  getDashboard(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.scolariteService.getDashboardEtudiant(userId);
   }
 
@@ -147,9 +169,11 @@ export class ScolariteController {
   }
 
   @Get('echeances/user/:userId')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({ summary: 'Toutes les échéances scolarité d\'un utilisateur' })
   @ApiParam({ name: 'userId' })
-  findEcheancesByUser(@Param('userId') userId: string) {
+  findEcheancesByUser(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.scolariteService.findEcheancesByUser(userId);
   }
 
@@ -163,9 +187,11 @@ export class ScolariteController {
   }
 
   @Get('versements/user/:userId')
+  @Roles(UserRole.ADMIN, UserRole.ETUDIANT, UserRole.PROFESSEUR)
   @ApiOperation({ summary: 'Tous les versements scolarité d\'un utilisateur' })
   @ApiParam({ name: 'userId' })
-  findVersementsByUser(@Param('userId') userId: string) {
+  findVersementsByUser(@Param('userId') userId: string, @Request() req: AuthedRequest) {
+    assertSelfOrAdmin(req, userId);
     return this.scolariteService.findVersementsByUser(userId);
   }
 
