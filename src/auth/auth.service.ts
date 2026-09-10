@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ?? 'change_this_refresh_secret_in_production';
@@ -43,6 +44,22 @@ export class AuthService {
       ),
       user: userWithoutPassword,
     };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.userService.findOneWithPassword(userId);
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur introuvable');
+    }
+
+    const currentPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!currentPasswordValid) {
+      throw new UnauthorizedException('Mot de passe actuel incorrect');
+    }
+
+    await this.userService.update(userId, { password: dto.newPassword });
+
+    return { message: 'Mot de passe mis à jour avec succès' };
   }
 
   async refresh(dto: RefreshTokenDto): Promise<{ access_token: string; refresh_token: string }> {

@@ -54,6 +54,14 @@ export class UserService {
       .getOne();
   }
 
+  async findOneWithPassword(id: string): Promise<User | null> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
  async create(createUserDto: CreateUserDto): Promise<User> {
   const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
   const user = this.userRepository.create({
