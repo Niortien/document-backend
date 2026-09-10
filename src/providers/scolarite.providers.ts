@@ -1,9 +1,9 @@
 import { DataSource } from 'typeorm';
-import { ScolariteConfig } from '../src/database/entities/scolarite-config.entity';
-import { ScolariteEtudiant } from '../src/database/entities/scolarite-etudiant.entity';
-import { VersementScolarite } from '../src/database/entities/versement-scolarite.entity';
-import { EcheancierScolarite } from '../src/database/entities/echeancier-scolarite.entity';
-import { EcheanceEtudiant } from '../src/database/entities/echeance-etudiant.entity';
+import { ScolariteConfig } from '../database/entities/scolarite-config.entity';
+import { ScolariteEtudiant } from '../database/entities/scolarite-etudiant.entity';
+import { VersementScolarite } from '../database/entities/versement-scolarite.entity';
+import { EcheancierScolarite } from '../database/entities/echeancier-scolarite.entity';
+import { EcheanceEtudiant } from '../database/entities/echeance-etudiant.entity';
 
 export const scolariteProviders = [
   {

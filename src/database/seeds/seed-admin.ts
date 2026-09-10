@@ -23,12 +23,17 @@ async function seed() {
 
   const userRepo = dataSource.getRepository(User);
 
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!seedPassword) {
+    throw new Error('SEED_ADMIN_PASSWORD env var is required to seed the admin account');
+  }
+
   const admins = [
     {
       firstName: 'Super',
       lastName: 'Admin',
-      email: 'admin@ecole.sn',
-      password: 'Admin123!',
+      email: process.env.SEED_ADMIN_EMAIL ?? 'admin@ecole.sn',
+      password: seedPassword,
     },
   ];
 

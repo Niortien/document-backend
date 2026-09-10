@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/module/database.module';
 import { MatiereService } from './matiere.service';
 import { MatiereController } from './matiere.controller';
-import { matiereProviders } from '../../providers/matiere.providers';
+import { matiereProviders } from '../providers/matiere.providers';
 
 @Module({
   imports: [DatabaseModule],

@@ -1,4 +1,4 @@
-import { NoteEtudiant } from '../src/database/entities/note-etudiant.entity';
+import { NoteEtudiant } from '../database/entities/note-etudiant.entity';
 import { DataSource } from 'typeorm';
 
 export const noteProviders = [

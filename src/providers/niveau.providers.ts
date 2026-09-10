@@ -1,4 +1,4 @@
-import { Niveau } from '../src/database/entities/niveau.entity';
+import { Niveau } from '../database/entities/niveau.entity';
 import { DataSource } from 'typeorm';
 
 export const niveauProviders = [

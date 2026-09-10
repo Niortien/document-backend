@@ -1,4 +1,4 @@
-import { ProfesseurMatiere } from '../src/database/entities/professeur-matiere.entity';
+import { ProfesseurMatiere } from '../database/entities/professeur-matiere.entity';
 import { DataSource } from 'typeorm';
 
 export const professeurMatiereProviders = [

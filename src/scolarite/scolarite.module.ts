@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/module/database.module';
 import { ScolariteService } from './scolarite.service';
 import { ScolariteController } from './scolarite.controller';
-import { scolariteProviders } from '../../providers/scolarite.providers';
+import { scolariteProviders } from '../providers/scolarite.providers';
 
 @Module({
   imports: [DatabaseModule],

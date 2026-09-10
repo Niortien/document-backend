@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
-import { TransportConfig } from '../src/database/entities/transport-config.entity';
-import { TransportAbonnement } from '../src/database/entities/transport-abonnement.entity';
-import { VersementTransport } from '../src/database/entities/versement-transport.entity';
+import { TransportConfig } from '../database/entities/transport-config.entity';
+import { TransportAbonnement } from '../database/entities/transport-abonnement.entity';
+import { VersementTransport } from '../database/entities/versement-transport.entity';
 
 export const transportProviders = [
   {

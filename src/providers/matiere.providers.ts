@@ -1,4 +1,4 @@
-import { Matiere } from '../src/database/entities/matiere.entity';
+import { Matiere } from '../database/entities/matiere.entity';
 import { DataSource } from 'typeorm';
 
 export const matiereProviders = [

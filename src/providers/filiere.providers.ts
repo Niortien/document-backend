@@ -1,4 +1,4 @@
-import { Filiere } from '../src/database/entities/filiere.entity';
+import { Filiere } from '../database/entities/filiere.entity';
 import { DataSource } from 'typeorm';
 
 export const filiereProviders = [

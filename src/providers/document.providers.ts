@@ -1,4 +1,4 @@
-import { Document } from '../src/database/entities/document.entity';
+import { Document } from '../database/entities/document.entity';
 import { DataSource } from 'typeorm';
 
 export const documentProviders = [

@@ -1,12 +1,12 @@
 import { DataSource } from 'typeorm';
-import { User } from '../src/database/entities/user.entity';
-import { Filiere } from '../src/database/entities/filiere.entity';
-import { Niveau } from '../src/database/entities/niveau.entity';
-import { ScolariteEtudiant } from '../src/database/entities/scolarite-etudiant.entity';
-import { EcheanceEtudiant } from '../src/database/entities/echeance-etudiant.entity';
-import { VersementScolarite } from '../src/database/entities/versement-scolarite.entity';
-import { TransportAbonnement } from '../src/database/entities/transport-abonnement.entity';
-import { VersementTransport } from '../src/database/entities/versement-transport.entity';
+import { User } from '../database/entities/user.entity';
+import { Filiere } from '../database/entities/filiere.entity';
+import { Niveau } from '../database/entities/niveau.entity';
+import { ScolariteEtudiant } from '../database/entities/scolarite-etudiant.entity';
+import { EcheanceEtudiant } from '../database/entities/echeance-etudiant.entity';
+import { VersementScolarite } from '../database/entities/versement-scolarite.entity';
+import { TransportAbonnement } from '../database/entities/transport-abonnement.entity';
+import { VersementTransport } from '../database/entities/versement-transport.entity';
 
 export const adminProviders = [
   {
