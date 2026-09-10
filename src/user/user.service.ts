@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { User } from '../database/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Injectable()
 export class UserService {
@@ -12,13 +13,33 @@ export class UserService {
     private userRepository: Repository<User>,
   ) {}
 
- async findAll(): Promise<User[]> {
-  return this.userRepository.find({
-    relations: ['filiere', 'niveau'],
-    order: {
-      createdAt: 'DESC',
-    },
-  });
+ async findAll(filters: FindUsersDto = {}): Promise<User[]> {
+  const qb = this.userRepository
+    .createQueryBuilder('user')
+    .leftJoinAndSelect('user.filiere', 'filiere')
+    .leftJoinAndSelect('user.niveau', 'niveau');
+
+  if (filters.search) {
+    const term = `%${filters.search.toLowerCase()}%`;
+    qb.andWhere(
+      '(LOWER(user.firstName) LIKE :term OR LOWER(user.lastName) LIKE :term OR LOWER(user.email) LIKE :term)',
+      { term },
+    );
+  }
+  if (filters.role) {
+    qb.andWhere('user.role = :role', { role: filters.role });
+  }
+  if (filters.filiereId) {
+    qb.andWhere('user.filiereId = :filiereId', { filiereId: filters.filiereId });
+  }
+  if (filters.niveauId) {
+    qb.andWhere('user.niveauId = :niveauId', { niveauId: filters.niveauId });
+  }
+  if (filters.isActive !== undefined) {
+    qb.andWhere('user.isActive = :isActive', { isActive: filters.isActive });
+  }
+
+  return qb.orderBy('user.createdAt', 'DESC').getMany();
 }
 
   async findOne(id: string): Promise<User | null> {

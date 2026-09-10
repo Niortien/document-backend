@@ -1,12 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, UseInterceptors, UploadedFile, BadRequestException, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, HttpException, HttpStatus, UseInterceptors, UploadedFile, BadRequestException, Patch, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from '../database/entities/user.entity';
+import { FindUsersDto } from './dto/find-users.dto';
+import { User, UserRole } from '../database/entities/user.entity';
 
 const ALLOWED_IMAGE_MIMETYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
@@ -34,10 +35,15 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Récupérer tous les utilisateurs', description: 'Récupérer tous les utilisateurs triés par date de création' })
+  @ApiOperation({ summary: 'Récupérer tous les utilisateurs', description: 'Liste filtrée des utilisateurs' })
+  @ApiQuery({ name: 'search', required: false, description: 'Recherche par prénom, nom ou email' })
+  @ApiQuery({ name: 'role', required: false, enum: UserRole, description: 'Filtrer par rôle' })
+  @ApiQuery({ name: 'filiereId', required: false, description: 'Filtrer par ID filière' })
+  @ApiQuery({ name: 'niveauId', required: false, description: 'Filtrer par ID niveau' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean, description: 'Filtrer par statut actif/inactif' })
   @ApiResponse({ status: 200, description: 'Liste des utilisateurs récupérée avec succès', type: [User] })
-  async findAll(): Promise<User[]> {
-    return this.userService.findAll();
+  async findAll(@Query() filters: FindUsersDto): Promise<User[]> {
+    return this.userService.findAll(filters);
   }
 
   @Get(':id')

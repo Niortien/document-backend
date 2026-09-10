@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { NoteEtudiant, StatutNote } from '../database/entities/note-etudiant.entity';
+import { FindNotesDto } from './dto/find-notes.dto';
 import { Matiere } from '../database/entities/matiere.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -170,6 +171,42 @@ export class NotesService {
       where: { id },
       relations: ['etudiant', 'matiere'],
     });
+  }
+
+  /** Liste filtrée des notes (statut, filière, niveau, étudiant, matière, année) */
+  async findAll(filters: FindNotesDto): Promise<NoteEtudiant[]> {
+    const qb = this.noteRepository
+      .createQueryBuilder('note')
+      .leftJoinAndSelect('note.etudiant', 'etudiant')
+      .leftJoinAndSelect('note.matiere', 'matiere');
+
+    if (filters.anneeAcademique) {
+      qb.andWhere('note.anneeAcademique = :anneeAcademique', { anneeAcademique: filters.anneeAcademique });
+    }
+    if (filters.etudiantId) {
+      qb.andWhere('note.etudiantId = :etudiantId', { etudiantId: filters.etudiantId });
+    }
+    if (filters.matiereId) {
+      qb.andWhere('note.matiereId = :matiereId', { matiereId: filters.matiereId });
+    }
+    if (filters.statut) {
+      qb.andWhere('note.statut = :statut', { statut: filters.statut });
+    }
+    if (filters.filiereId) {
+      qb.andWhere('etudiant.filiereId = :filiereId', { filiereId: filters.filiereId });
+    }
+    if (filters.niveauId) {
+      qb.andWhere('etudiant.niveauId = :niveauId', { niveauId: filters.niveauId });
+    }
+    if (filters.search) {
+      const term = `%${filters.search.toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(etudiant.firstName) LIKE :term OR LOWER(etudiant.lastName) LIKE :term)',
+        { term },
+      );
+    }
+
+    return qb.orderBy('note.createdAt', 'ASC').getMany();
   }
 
   /** Toutes les notes d'un étudiant pour une année académique */

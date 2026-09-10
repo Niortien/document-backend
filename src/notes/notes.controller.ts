@@ -26,11 +26,12 @@ import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { SaisirSessionDto } from './dto/saisir-session.dto';
+import { FindNotesDto } from './dto/find-notes.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../database/entities/user.entity';
-import { NoteEtudiant } from '../database/entities/note-etudiant.entity';
+import { NoteEtudiant, StatutNote } from '../database/entities/note-etudiant.entity';
 
 @ApiTags('notes')
 @ApiBearerAuth()
@@ -122,35 +123,18 @@ export class NotesController {
   // Consultation
   // ──────────────────────────────────────────────────────────────────
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Récupérer une note par ID' })
-  @ApiParam({ name: 'id', description: 'ID de la note' })
-  @ApiResponse({ status: 200, description: 'Note trouvée', type: NoteEtudiant })
-  @ApiResponse({ status: 404, description: 'Note non trouvée' })
-  async findOne(@Param('id') id: string): Promise<NoteEtudiant> {
-    const note = await this.notesService.findOne(id);
-    if (!note) throw new NotFoundException('Note non trouvée');
-    return note;
-  }
-
-  @Get()
+  @Get('mon-bulletin')
   @ApiOperation({
-    summary: 'Lister les notes',
-    description:
-      'Filtrer par étudiant (etudiantId + anneeAcademique) ou par matière (matiereId + anneeAcademique).',
+    summary: 'Consulter mon bulletin (étudiant)',
+    description: 'L\'étudiant connecté consulte son propre bulletin en temps réel.',
   })
-  @ApiQuery({ name: 'etudiantId', required: false, description: 'ID de l\'étudiant' })
-  @ApiQuery({ name: 'matiereId', required: false, description: 'ID de la matière' })
-  @ApiQuery({ name: 'anneeAcademique', required: true, description: 'Année académique, ex: 2025-2026' })
-  @ApiResponse({ status: 200, description: 'Liste des notes', type: [NoteEtudiant] })
-  findAll(
+  @ApiQuery({ name: 'anneeAcademique', required: true, description: 'Ex: 2025-2026' })
+  @ApiResponse({ status: 200, description: 'Bulletin de l\'étudiant connecté' })
+  getMonBulletin(
+    @Request() req: { user: { id: string } },
     @Query('anneeAcademique') anneeAcademique: string,
-    @Query('etudiantId') etudiantId?: string,
-    @Query('matiereId') matiereId?: string,
-  ): Promise<NoteEtudiant[]> {
-    if (etudiantId) return this.notesService.findByEtudiant(etudiantId, anneeAcademique);
-    if (matiereId) return this.notesService.findByMatiere(matiereId, anneeAcademique);
-    return Promise.resolve([]);
+  ) {
+    return this.notesService.getBulletin(req.user.id, anneeAcademique);
   }
 
   // ──────────────────────────────────────────────────────────────────
@@ -174,21 +158,32 @@ export class NotesController {
     return this.notesService.getBulletin(etudiantId, anneeAcademique);
   }
 
-  /**
-   * Endpoint étudiant : consulter son propre bulletin.
-   * L'ID de l'étudiant est extrait du JWT.
-   */
-  @Get('mon-bulletin')
+  @Get()
   @ApiOperation({
-    summary: 'Consulter mon bulletin (étudiant)',
-    description: 'L\'étudiant connecté consulte son propre bulletin en temps réel.',
+    summary: 'Lister les notes avec filtres',
+    description:
+      'Filtres disponibles : anneeAcademique, etudiantId, matiereId, filiereId, niveauId, statut.',
   })
-  @ApiQuery({ name: 'anneeAcademique', required: true, description: 'Ex: 2025-2026' })
-  @ApiResponse({ status: 200, description: 'Bulletin de l\'étudiant connecté' })
-  getMonBulletin(
-    @Request() req: { user: { id: string } },
-    @Query('anneeAcademique') anneeAcademique: string,
-  ) {
-    return this.notesService.getBulletin(req.user.id, anneeAcademique);
+  @ApiQuery({ name: 'anneeAcademique', required: false, description: 'Année académique, ex: 2025-2026' })
+  @ApiQuery({ name: 'etudiantId', required: false, description: 'ID de l\'étudiant' })
+  @ApiQuery({ name: 'matiereId', required: false, description: 'ID de la matière' })
+  @ApiQuery({ name: 'filiereId', required: false, description: 'ID de la filière' })
+  @ApiQuery({ name: 'niveauId', required: false, description: 'ID du niveau' })
+  @ApiQuery({ name: 'statut', required: false, enum: StatutNote, description: 'Statut de la note' })
+  @ApiQuery({ name: 'search', required: false, description: 'Recherche par prénom ou nom de l\'étudiant' })
+  @ApiResponse({ status: 200, description: 'Liste des notes filtrées', type: [NoteEtudiant] })
+  findAll(@Query() filters: FindNotesDto): Promise<NoteEtudiant[]> {
+    return this.notesService.findAll(filters);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Récupérer une note par ID' })
+  @ApiParam({ name: 'id', description: 'ID de la note' })
+  @ApiResponse({ status: 200, description: 'Note trouvée', type: NoteEtudiant })
+  @ApiResponse({ status: 404, description: 'Note non trouvée' })
+  async findOne(@Param('id') id: string): Promise<NoteEtudiant> {
+    const note = await this.notesService.findOne(id);
+    if (!note) throw new NotFoundException('Note non trouvée');
+    return note;
   }
 }
