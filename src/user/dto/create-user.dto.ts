@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsEmail, IsBoolean, IsEnum, IsOptional, IsUUID, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../database/entities/user.entity';
 
@@ -18,6 +18,7 @@ export class CreateUserDto {
   
   @ApiProperty({ description: 'Password for the user account', example: 'password123' })
   @IsString()
+  @MinLength(6)
   password: string;
   
   @ApiPropertyOptional({ description: 'Whether the user account is active', default: true, example: true })
